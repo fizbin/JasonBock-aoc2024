@@ -21,6 +21,12 @@ public static class SolutionDay16
 
 		var pathsToEvaluate = new List<Path>() { startPath };
 
+		var bestCosts = new Dictionary<Direction, Dictionary<Position, long>>();
+		foreach (var dir in Enum.GetValues<Direction>())
+		{
+			bestCosts[dir] = [];
+		}
+
 		while (pathsToEvaluate.Count > 0)
 		{
 			Console.WriteLine(
@@ -29,18 +35,20 @@ public static class SolutionDay16
 
 			foreach (var pathToEvaluate in pathsToEvaluate)
 			{
-				if (pathToEvaluate.CurrentCost < minimalCost)
+				if (pathToEvaluate.CurrentCost >= bestCosts[pathToEvaluate.CurrentDirection].GetValueOrDefault(pathToEvaluate.CurrentPosition, long.MaxValue))
 				{
-					var nextPaths = pathToEvaluate.GetNextPaths();
-					var minimalFinishedNextPath = nextPaths.Where(_ => _.IsFinished).MinBy(_ => _.CurrentCost);
-
-					if (minimalFinishedNextPath?.CurrentCost < minimalCost)
-					{
-						minimalCost = minimalFinishedNextPath.CurrentCost;
-					}
-
-					newPaths.AddRange(nextPaths.Where(_ => !_.IsFinished && _.CurrentCost < minimalCost));
+					continue;
 				}
+				bestCosts[pathToEvaluate.CurrentDirection][pathToEvaluate.CurrentPosition] = pathToEvaluate.CurrentCost;
+				var nextPaths = pathToEvaluate.GetNextPaths();
+				var minimalFinishedNextPath = nextPaths.Where(_ => _.IsFinished).MinBy(_ => _.CurrentCost);
+
+				if (minimalFinishedNextPath?.CurrentCost < minimalCost)
+				{
+					minimalCost = minimalFinishedNextPath.CurrentCost;
+				}
+
+				newPaths.AddRange(nextPaths.Where(_ => !_.IsFinished && _.CurrentCost < minimalCost));
 			}
 
 			pathsToEvaluate = newPaths;

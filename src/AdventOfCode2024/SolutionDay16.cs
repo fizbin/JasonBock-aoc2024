@@ -17,10 +17,10 @@ public static class SolutionDay16
 
 		var startLocation = map.Single(_ => _.Value == MapItemType.Start).Key;
 		ImmutableList<Path> startPaths = [
-			new(map, 0, 0, startLocation, Direction.East, false),
-			new(map, 0, 0, startLocation, Direction.West, false),
-			new(map, 0, 0, startLocation, Direction.South, false),
-			new(map, 0, 0, startLocation, Direction.North, false),
+			new(map, 0, 0, startLocation, Direction.East, false, null),
+			new(map, 0, 0, startLocation, Direction.West, false, null),
+			new(map, 0, 0, startLocation, Direction.South, false, null),
+			new(map, 0, 0, startLocation, Direction.North, false, null),
 		];
 
 		var pathsToEvaluate = new List<Path>(startPaths);
@@ -59,6 +59,72 @@ public static class SolutionDay16
 		return minimalCost;
 	}
 
+	public static long RunPart2(ImmutableArray<string> input)
+	{
+		var map = SolutionDay16.ParseInput(input);
+
+		var minimalCost = long.MaxValue;
+		List<Path> minPaths = [];
+
+		var startLocation = map.Single(_ => _.Value == MapItemType.Start).Key;
+		ImmutableList<Path> startPaths = [
+			new(map, 0, 0, startLocation, Direction.East, false, null),
+			new(map, 0, 0, startLocation, Direction.West, false, null),
+			new(map, 0, 0, startLocation, Direction.South, false, null),
+			new(map, 0, 0, startLocation, Direction.North, false, null),
+		];
+
+		var pathsToEvaluate = new List<Path>(startPaths);
+
+		var bestCosts = new Dictionary<Direction, Dictionary<Position, long>>();
+		foreach (var dir in Enum.GetValues<Direction>())
+		{
+			bestCosts[dir] = [];
+		}
+
+		while (pathsToEvaluate.Count > 0)
+		{
+			var newPaths = new List<Path>();
+
+			foreach (var pathToEvaluate in pathsToEvaluate)
+			{
+				if (pathToEvaluate.CurrentCost > bestCosts[pathToEvaluate.CurrentDirection].GetValueOrDefault(pathToEvaluate.CurrentPosition, long.MaxValue))
+				{
+					continue;
+				}
+				bestCosts[pathToEvaluate.CurrentDirection][pathToEvaluate.CurrentPosition] = pathToEvaluate.CurrentCost;
+				var nextPaths = pathToEvaluate.GetNextPaths();
+				var minimalFinishedNextPath = nextPaths.Where(_ => _.IsFinished).MinBy(_ => _.CurrentCost);
+
+				if (minimalFinishedNextPath?.CurrentCost < minimalCost)
+				{
+					minimalCost = minimalFinishedNextPath.CurrentCost;
+					minPaths = nextPaths.Where(_ => _.IsFinished && _.CurrentCost == minimalCost).ToList();
+				}
+				else if (minimalFinishedNextPath?.CurrentCost == minimalCost)
+				{
+					minPaths.AddRange(nextPaths.Where(_ => _.IsFinished && _.CurrentCost == minimalCost));
+				}
+
+				newPaths.AddRange(nextPaths.Where(_ => !_.IsFinished && _.CurrentCost < minimalCost));
+			}
+
+			pathsToEvaluate = newPaths;
+		}
+
+		var minPathTiles = new HashSet<Position>();
+		foreach (var minP in minPaths)
+		{
+			var cp = minP;
+			while (cp is not null)
+			{
+				minPathTiles.Add(cp.CurrentPosition);
+				cp = cp.parent;
+			}
+		}
+		return minPathTiles.Count;
+	}
+
 	private static Map ParseInput(ImmutableArray<string> input)
 	{
 		var mapItems = new Dictionary<Position, MapItemType>();
@@ -88,7 +154,7 @@ public static class SolutionDay16
 }
 
 public sealed record Path(Map Map, int TraversedPositionCount, int NumberOfTurns,
-	Position CurrentPosition, Direction CurrentDirection, bool IsFinished)
+	Position CurrentPosition, Direction CurrentDirection, bool IsFinished, Path? parent)
 {
 	public ImmutableArray<Path> GetNextPaths()
 	{
@@ -107,6 +173,7 @@ public sealed record Path(Map Map, int TraversedPositionCount, int NumberOfTurns
 						CurrentPosition = nextPosition,
 						CurrentDirection = look,
 						IsFinished = this.Map.ContainsKey(nextPosition),
+						parent = this,
 					});
 				}
 			}

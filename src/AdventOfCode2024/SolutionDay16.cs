@@ -1,6 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.Net.NetworkInformation;
-using System.Numerics;
 using Map = System.Collections.Immutable.ImmutableDictionary<AdventOfCode2024.Day16.Position, AdventOfCode2024.Day16.MapItemType>;
 
 namespace AdventOfCode2024.Day16;
@@ -95,72 +93,22 @@ public sealed record Path(Map Map, int TraversedPositionCount, int NumberOfTurns
 	public ImmutableArray<Path> GetNextPaths()
 	{
 		var newPaths = new List<Path>();
-
-		if (this.CurrentDirection != Direction.West)
+		foreach (var look in Enum.GetValues<Direction>())
 		{
-			// Look East
-			var nextPosition = this.CurrentPosition with { X = this.CurrentPosition.X + 1 };
-			if (this.Map.GetValueOrDefault(nextPosition, MapItemType.End) == MapItemType.End)
+			if (this.CurrentDirection != look.Opposite())
 			{
-				newPaths.Add(this with
+				var nextPosition = this.CurrentPosition.Look(look);
+				if (this.Map.GetValueOrDefault(nextPosition, MapItemType.End) == MapItemType.End)
 				{
-					TraversedPositionCount = this.TraversedPositionCount + 1,
-					NumberOfTurns = this.CurrentDirection != Direction.East ? this.NumberOfTurns + 1 : this.NumberOfTurns,
-					CurrentPosition = nextPosition,
-					CurrentDirection = Direction.East,
-					IsFinished = this.Map.ContainsKey(nextPosition),
-				});
-			}
-		}
-
-		if (this.CurrentDirection != Direction.North)
-		{
-			// Look South
-			var nextPosition = this.CurrentPosition with { Y = this.CurrentPosition.Y + 1 };
-			if (this.Map.GetValueOrDefault(nextPosition, MapItemType.End) == MapItemType.End)
-			{
-				newPaths.Add(this with
-				{
-					TraversedPositionCount = this.TraversedPositionCount + 1,
-					NumberOfTurns = this.CurrentDirection != Direction.South ? this.NumberOfTurns + 1 : this.NumberOfTurns,
-					CurrentPosition = nextPosition,
-					CurrentDirection = Direction.South,
-					IsFinished = this.Map.ContainsKey(nextPosition),
-				});
-			}
-		}
-
-		if (this.CurrentDirection != Direction.East)
-		{
-			// Look West
-			var nextPosition = this.CurrentPosition with { X = this.CurrentPosition.X - 1 };
-			if (this.Map.GetValueOrDefault(nextPosition, MapItemType.End) == MapItemType.End)
-			{
-				newPaths.Add(this with
-				{
-					TraversedPositionCount = this.TraversedPositionCount + 1,
-					NumberOfTurns = this.CurrentDirection != Direction.West ? this.NumberOfTurns + 1 : this.NumberOfTurns,
-					CurrentPosition = nextPosition,
-					CurrentDirection = Direction.West,
-					IsFinished = this.Map.ContainsKey(nextPosition),
-				});
-			}
-		}
-
-		if (this.CurrentDirection != Direction.South)
-		{
-			// Look North
-			var nextPosition = this.CurrentPosition with { Y = this.CurrentPosition.Y - 1 };
-			if (this.Map.GetValueOrDefault(nextPosition, MapItemType.End) == MapItemType.End)
-			{
-				newPaths.Add(this with
-				{
-					TraversedPositionCount = this.TraversedPositionCount + 1,
-					NumberOfTurns = this.CurrentDirection != Direction.North ? this.NumberOfTurns + 1 : this.NumberOfTurns,
-					CurrentPosition = nextPosition,
-					CurrentDirection = Direction.North,
-					IsFinished = this.Map.ContainsKey(nextPosition),
-				});
+					newPaths.Add(this with
+					{
+						TraversedPositionCount = this.TraversedPositionCount + 1,
+						NumberOfTurns = this.CurrentDirection != look ? this.NumberOfTurns + 1 : this.NumberOfTurns,
+						CurrentPosition = nextPosition,
+						CurrentDirection = look,
+						IsFinished = this.Map.ContainsKey(nextPosition),
+					});
+				}
 			}
 		}
 
@@ -172,6 +120,25 @@ public sealed record Path(Map Map, int TraversedPositionCount, int NumberOfTurns
 
 public enum MapItemType { Start, End, Wall }
 public enum Direction { West, North, East, South }
-public sealed record Position(int X, int Y);
+static class DirectionExtension
+{
+	public static Direction Opposite(this Direction d) => d switch
+	{
+		Direction.North => Direction.South,
+		Direction.South => Direction.North,
+		Direction.West => Direction.East,
+		_ => Direction.West,
+	};
+}
+public sealed record Position(int X, int Y)
+{
+	public Position Look(Direction direction) => direction switch
+	{
+		Direction.North => this with { Y = this.Y - 1 },
+		Direction.South => this with { Y = this.Y + 1 },
+		Direction.West => this with { X = this.X - 1 },
+		_ => this with { X = this.X + 1 },
+	};
+}
 public sealed record MapItem(MapItemType Type, Position Position);
 public sealed record Reindeer(Direction CurrentDirection, Position Position);

@@ -43,4 +43,36 @@ public static class SolutionDay20Tests
 			SolutionDay20.RunPart1([.. input.Split(Environment.NewLine)], minimumSavings),
 			Is.EqualTo(expectedCheatCount));
 	}
+
+	[TestCase(80, 0)]
+	[TestCase(76, 3)]
+	[TestCase(74, 7)]
+	[TestCase(72, 29)]
+	[TestCase(70, 41)]
+	public static void Part2(int minimumSavings, int expectedCheatCount)
+	{
+		var input =
+			"""
+			###############
+			#...#...#.....#
+			#.#.#.#.#.###.#
+			#S#...#.#.#...#
+			#######.#.#.###
+			#######.#.#...#
+			#######.#.###.#
+			###..E#...#...#
+			###.#######.###
+			#...###...#...#
+			#.#####.#.###.#
+			#.#...#.#.#...#
+			#.#.#.#.#.#.###
+			#...#...#...###
+			###############
+			""";
+
+
+		Assert.That(
+			SolutionDay20.RunPart2([.. input.Split(Environment.NewLine)], minimumSavings),
+			Is.EqualTo(expectedCheatCount));
+	}
 }

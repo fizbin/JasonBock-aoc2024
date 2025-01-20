@@ -5,35 +5,86 @@ namespace AdventOfCode2024.Day20;
 public static class SolutionDay20
 {
 	private const char End = 'E';
-	private const char Path = '.';
 	private const char Start = 'S';
 	private const char Wall = '#';
 
 	public static int RunPart1(ImmutableArray<string> input, int minimumSaving)
 	{
-		var (path, cheats) = SolutionDay20.GetPath(input);
+		var path = SolutionDay20.GetPath(input);
 
-		// Key is savings
-		// Value is the count
+		var posToPath = new Dictionary<Position, int>();
+		var pathIdx = 0;
+		foreach (var pos in path)
+		{
+			posToPath[pos] = pathIdx++;
+		}
+
 		var cheatSavings = 0;
 
-		foreach (var cheat in cheats)
+		foreach (var startSpot in path)
 		{
-			var startingIndex = path.IndexOf(cheat.Item1);
-			var endingIndex = path.IndexOf(cheat.Item2);
-
-			var savings = endingIndex - startingIndex - 2;
-
-			if (savings >= minimumSaving)
+			var startIdx = posToPath[startSpot];
+			foreach (var endSpot in SolutionDay20.GetSpotsWithin(startSpot, 2, 2))
 			{
-				cheatSavings++;
+				var endIdx = posToPath.GetValueOrDefault(endSpot, 0);
+				if (endIdx - startIdx - 2 >= minimumSaving)
+				{
+					cheatSavings++;
+				}
 			}
 		}
 
 		return cheatSavings;
 	}
 
-	private static (ImmutableArray<Position>, ImmutableArray<(Position, Position)>) GetPath(ImmutableArray<string> input)
+	public static int RunPart2(ImmutableArray<string> input, int minimumSaving)
+	{
+		var path = SolutionDay20.GetPath(input);
+
+		var posToPath = new Dictionary<Position, int>();
+		var pathIdx = 0;
+		foreach (var pos in path)
+		{
+			posToPath[pos] = pathIdx++;
+		}
+
+		var cheatSavings = 0;
+
+		foreach (var startSpot in path)
+		{
+			var startIdx = posToPath[startSpot];
+			foreach (var endSpot in SolutionDay20.GetSpotsWithin(startSpot, 20, 2))
+			{
+				var endIdx = posToPath.GetValueOrDefault(endSpot, 0);
+				var cheatLen = Math.Abs(endSpot.X - startSpot.X) + Math.Abs(endSpot.Y - startSpot.Y);
+				if (endIdx - startIdx - cheatLen >= minimumSaving)
+				{
+					cheatSavings++;
+				}
+			}
+		}
+
+		return cheatSavings;
+	}
+
+
+	private static ImmutableArray<Position> GetSpotsWithin(Position src, int maxDist, int minDist)
+	{
+		var paths = new List<Position>();
+		// gets all spots that are at least minDist away but at most maxDist away
+		for (var xoff = -maxDist; xoff <= maxDist; xoff++)
+		{
+			for (var yoff = -maxDist; yoff <= maxDist; yoff++)
+			{
+				if (Math.Abs(xoff) + Math.Abs(yoff) > maxDist) { continue; }
+				if (Math.Abs(xoff) + Math.Abs(yoff) < minDist) { continue; }
+				paths.Add(new Position(xoff + src.X, yoff + src.Y));
+			}
+		}
+		return [.. paths];
+	}
+
+	private static ImmutableArray<Position> GetPath(ImmutableArray<string> input)
 	{
 		Position? startPosition = null;
 
@@ -49,7 +100,6 @@ public static class SolutionDay20
 		}
 
 		var path = new List<Position> { startPosition! };
-		var cheats = new HashSet<(Position, Position)>();
 
 		var maxX = input[0].Length;
 		var maxY = input.Length;
@@ -66,21 +116,7 @@ public static class SolutionDay20
 			var eastPosition = currentPosition with { X = currentPosition.X + 1 };
 			var eastCharacter = input[eastPosition.Y][eastPosition.X];
 
-			if (eastCharacter == SolutionDay20.Wall)
-			{
-				var secondCharacter = input[eastPosition.Y][(eastPosition.X + 1 + maxX) % maxX];
-
-				if (secondCharacter == SolutionDay20.Path || secondCharacter == SolutionDay20.End)
-				{
-					var endCheatPosition = currentPosition with { X = currentPosition.X + 2 };
-
-					if (!path.Contains(endCheatPosition))
-					{
-						cheats.Add(new(currentPosition, endCheatPosition));
-					}
-				}
-			}
-			else if (!path.Contains(eastPosition))
+			if (eastCharacter != SolutionDay20.Wall && !path.Contains(eastPosition))
 			{
 				path.Add(eastPosition);
 
@@ -94,21 +130,7 @@ public static class SolutionDay20
 			var southPosition = currentPosition with { Y = currentPosition.Y + 1 };
 			var southCharacter = input[southPosition.Y][southPosition.X];
 
-			if (southCharacter == SolutionDay20.Wall)
-			{
-				var secondCharacter = input[(southPosition.Y + 1 + maxY) % maxY][southPosition.X];
-
-				if (secondCharacter == SolutionDay20.Path || secondCharacter == SolutionDay20.End)
-				{
-					var endCheatPosition = currentPosition with { Y = currentPosition.Y + 2 };
-
-					if (!path.Contains(endCheatPosition))
-					{
-						cheats.Add(new(currentPosition, endCheatPosition));
-					}
-				}
-			}
-			else if (!path.Contains(southPosition))
+			if (southCharacter != SolutionDay20.Wall && !path.Contains(southPosition))
 			{
 				path.Add(southPosition);
 
@@ -122,21 +144,7 @@ public static class SolutionDay20
 			var westPosition = currentPosition with { X = currentPosition.X - 1 };
 			var westCharacter = input[westPosition.Y][westPosition.X];
 
-			if (westCharacter == SolutionDay20.Wall)
-			{
-				var secondCharacter = input[westPosition.Y][(westPosition.X - 1 + maxX) % maxX];
-
-				if (secondCharacter == SolutionDay20.Path || secondCharacter == SolutionDay20.End)
-				{
-					var endCheatPosition = currentPosition with { X = currentPosition.X - 2 };
-
-					if (!path.Contains(endCheatPosition))
-					{
-						cheats.Add(new(currentPosition, endCheatPosition));
-					}
-				}
-			}
-			else if (!path.Contains(westPosition))
+			if (westCharacter != SolutionDay20.Wall && !path.Contains(westPosition))
 			{
 				path.Add(westPosition);
 
@@ -150,21 +158,7 @@ public static class SolutionDay20
 			var northPosition = currentPosition with { Y = currentPosition.Y - 1 };
 			var northCharacter = input[northPosition.Y][northPosition.X];
 
-			if (northCharacter == SolutionDay20.Wall)
-			{
-				var secondCharacter = input[(northPosition.Y - 1 + maxY) % maxY][northPosition.X];
-
-				if (secondCharacter == SolutionDay20.Path || secondCharacter == SolutionDay20.End)
-				{
-					var endCheatPosition = currentPosition with { Y = currentPosition.Y - 2 };
-
-					if (!path.Contains(endCheatPosition))
-					{
-						cheats.Add(new(currentPosition, endCheatPosition));
-					}
-				}
-			}
-			else if (!path.Contains(northPosition))
+			if (northCharacter != SolutionDay20.Wall && !path.Contains(northPosition))
 			{
 				path.Add(northPosition);
 
@@ -177,7 +171,7 @@ public static class SolutionDay20
 			currentPosition = path[^1];
 		}
 
-		return ([.. path], [.. cheats]);
+		return ([.. path]);
 	}
 }
 

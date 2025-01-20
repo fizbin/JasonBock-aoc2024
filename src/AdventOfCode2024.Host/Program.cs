@@ -42,12 +42,12 @@ using AdventOfCode2024.Day9;
 //RunDay17();
 //RunDay18();
 //RunDay19();
-//RunDay20();
+RunDay20();
 //RunDay21();
 //RunDay22();
 //RunDay23();
 //RunDay24();
-RunDay25();
+//RunDay25();
 
 static void RunDay1()
 {
@@ -180,13 +180,14 @@ static void RunDay19()
 {
 	Console.WriteLine(nameof(RunDay19));
 	Console.WriteLine($"Part 1 = {SolutionDay19.RunPart1([.. File.ReadAllLines("Day19Input.txt")])}");
-	Console.WriteLine($"Part 1 = {SolutionDay19.RunPart2([.. File.ReadAllLines("Day19Input.txt")])}");
+	Console.WriteLine($"Part 2 = {SolutionDay19.RunPart2([.. File.ReadAllLines("Day19Input.txt")])}");
 }
 
 static void RunDay20()
 {
 	Console.WriteLine(nameof(RunDay20));
 	Console.WriteLine($"Part 1 = {SolutionDay20.RunPart1([.. File.ReadAllLines("Day20Input.txt")], 100)}");
+	Console.WriteLine($"Part 2 = {SolutionDay20.RunPart2([.. File.ReadAllLines("Day20Input.txt")], 100)}");
 }
 
 static void RunDay21() => 
